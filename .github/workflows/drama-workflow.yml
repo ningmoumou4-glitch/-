@@ -1,0 +1,210 @@
+name: 国内下沉短剧剧本创作工作流
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  drama-creation-pipeline:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python 环境
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: 创建输出目录
+        run: |
+          mkdir -p output/json
+          mkdir -p libs
+
+      - name: 1️⃣ 检测输入文件
+        run: |
+          echo "🔍 检测输入文件..."
+          if [ -d "input" ]; then
+            find input -type f 2>/dev/null || echo "未检测到输入文件"
+          else
+            echo "ℹ️ input 文件夹不存在"
+          fi
+
+      - name: 2️⃣ 生成题材库和人物关系库
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          genre_library = {
+              "genres": [
+                  {"id": "g1", "name": "金钱知冷暖的认亲"},
+                  {"id": "g2", "name": "重生后浪子回头对家人好"},
+                  {"id": "g3", "name": "高手下山+特定领域"},
+                  {"id": "g4", "name": "大佬马甲流+特定领域环境"},
+                  {"id": "g5", "name": "长辈奉献遭践踏+清算吸血鬼"},
+                  {"id": "g6", "name": "原生家庭遭受不公+认亲豪门家人撑腰逆袭"},
+                  {"id": "g7", "name": "遗产逆风翻盘"},
+                  {"id": "g8", "name": "失忆大佬回归+手撕恶人护子"},
+                  {"id": "g9", "name": "离婚带球创业复仇逆袭"},
+                  {"id": "g10", "name": "后悔流+倒计时文学"},
+                  {"id": "g11", "name": "后悔流+凤凰男"},
+                  {"id": "g12", "name": "为爱牺牲却遭背弃+身份逆袭"}
+              ]
+          }
+          
+          character_library = {
+              "relationships": [
+                  "夫妻", "兄弟", "母女", "真假千金", "白月光", "女兄弟",
+                  "偏心的母亲/父亲", "凤凰男", "做靠山的大佬父母",
+                  "装穷认亲的子女/兄弟/父母", "高手下山的未婚夫/室友/救命恩人",
+                  "被欺负后觉醒反击的子女/长辈/女婿/儿媳"
+              ]
+          }
+          
+          with open("libs/genre-library.json", "w", encoding="utf-8") as f:
+              json.dump(genre_library, f, indent=2, ensure_ascii=False)
+          
+          with open("libs/character-library.json", "w", encoding="utf-8") as f:
+              json.dump(character_library, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 题材库和人物关系库已生成")
+          EOF
+
+      - name: 3️⃣ 生成创意组合
+        run: |
+          python3 << 'EOF'
+          import json
+          import random
+          
+          with open("libs/genre-library.json", "r", encoding="utf-8") as f:
+              genres = json.load(f)["genres"]
+          
+          with open("libs/character-library.json", "r", encoding="utf-8") as f:
+              relationships = json.load(f)["relationships"]
+          
+          suggestions = []
+          for i in range(3):
+              selected_genres = random.sample(genres, k=random.randint(1, 2))
+              selected_relationships = random.sample(relationships, k=random.randint(2, 3))
+              
+              suggestion = {
+                  "proposal_id": f"prop_{i+1:03d}",
+                  "genres": [g["name"] for g in selected_genres],
+                  "character_relationships": selected_relationships
+              }
+              suggestions.append(suggestion)
+          
+          output = {"creative_combinations": suggestions}
+          
+          with open("output/json/creative_combinations.json", "w", encoding="utf-8") as f:
+              json.dump(output, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 创意组合已生成")
+          EOF
+
+      - name: 4️⃣ 生成故事骨架
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          story_framework = {
+              "story_skeleton": {
+                  "three_act_structure": {
+                      "act_1_setup": "第一幕：建置",
+                      "act_2_confrontation": "第二幕：对抗",
+                      "act_3_climax": "第三幕：高潮/结局"
+                  },
+                  "pacing_curve": {
+                      "momentum_segment": "15%",
+                      "escalation_segment": "30%",
+                      "storm_segment": "35%",
+                      "climax_segment": "20%"
+                  }
+              }
+          }
+          
+          with open("output/json/story_skeleton.json", "w", encoding="utf-8") as f:
+              json.dump(story_framework, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 故事骨架已生成")
+          EOF
+
+      - name: 5️⃣ 生成角色设计（四层反派体系）
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          character_design = {
+              "four_layer_villain_system": {
+                  "layer_1_minor_villain": "小反派·日常对抗（前1/4）",
+                  "layer_2_middle_villain": "中反派·阶段威胁（前2/3）",
+                  "layer_3_major_villain": "大反派·核心对抗（中后期）",
+                  "layer_4_hidden_villain": "隐藏反派·终极反转（后1/3揭露）"
+              }
+          }
+          
+          with open("output/json/character_design.json", "w", encoding="utf-8") as f:
+              json.dump(character_design, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 角色设计已生成")
+          EOF
+
+      - name: 6️⃣ 生成分集大纲
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          episode_outline = {
+              "episode_directory": {
+                  "total_episodes": 30,
+                  "hook_type_distribution": {
+                      "emotional_hook": "30-40%",
+                      "suspense_hook": "20-30%",
+                      "crisis_hook": "10-20%",
+                      "information_hook": "10-20%",
+                      "plot_twist_hook": "5-15%"
+                  }
+              }
+          }
+          
+          with open("output/json/episode_directory.json", "w", encoding="utf-8") as f:
+              json.dump(episode_outline, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 分集大纲已生成")
+          EOF
+
+      - name: 7️⃣ 质量检查框架
+        run: |
+          python3 << 'EOF'
+          import json
+          
+          quality_report = {
+              "evaluation_dimensions": {
+                  "pacing": "节奏",
+                  "satisfaction_points": "爽点",
+                  "dialogue": "台词",
+                  "format": "格式",
+                  "coherence": "连贯性"
+              }
+          }
+          
+          with open("output/json/quality_report.json", "w", encoding="utf-8") as f:
+              json.dump(quality_report, f, indent=2, ensure_ascii=False)
+          
+          print("✅ 质量检查框架已生成")
+          EOF
+
+      - name: 📊 工作流完成
+        run: |
+          echo "============================================================"
+          echo "🎬 国内下沉短剧剧本创作工作流 - 执行完成"
+          echo "============================================================"
+          echo ""
+          echo "✅ 已生成的结构化数据文件:"
+          ls -la output/json/ || echo "无文件"
+          echo ""
+          echo "🎉 所有步骤已完成！"
+          echo "💡 已生成的数据可用于 AI 调用（Codex/Gemini）"
+          echo "============================================================"
